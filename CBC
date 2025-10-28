@@ -1,0 +1,23 @@
+package com.example.creditbureau.controller;
+
+import com.example.creditbureau.entity.CreditCardBureau;
+import com.example.creditbureau.service.CreditBureauService;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/api/credit-bureau")
+public class CreditBureauController {
+
+    private final CreditBureauService service;
+
+    public CreditBureauController(CreditBureauService service) {
+        this.service = service;
+    }
+
+    @PostMapping("/generate/{customerId}")
+    public CreditCardBureau generateData(@PathVariable String customerId) throws IOException {
+        return service.generateCustomerCreditData(customerId);
+    }
+}
