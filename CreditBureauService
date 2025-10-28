@@ -3,49 +3,41 @@ package com.example.creditbureau.service;
 import com.example.creditbureau.entity.CreditCardBureau;
 import com.example.creditbureau.repository.CreditCardBureauRepository;
 import com.example.creditbureau.utils.ExcelGeneratorUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Random;
 
 @Service
-public class CreditBureauService {
+public class CreditCardBureauService {
 
-    private final CreditCardBureauRepository repo;
-    private final ExcelGeneratorUtil excelGenerator;
+    @Autowired
+    private CreditCardBureauRepository repository;
 
-    public CreditBureauService(CreditCardBureauRepository repo, ExcelGeneratorUtil excelGenerator) {
-        this.repo = repo;
-        this.excelGenerator = excelGenerator;
-    }
+    @Autowired
+    private DataSynthesisService dataSynth;
 
-    public CreditCardBureau generateCustomerCreditData(String customerId) throws IOException {
-        // File paths (e.g., saved inside /data/ folder)
-        String paymentFile = "data/" + customerId + "_payment_history.xlsx";
-        String utilisationFile = "data/" + customerId + "_limit_utilisation.xlsx";
+    @Autowired
+    private ExcelGeneratorUtil excelUtil;
 
-        // Generate Excel files with 5 accounts and 50 rows each
-        excelGenerator.generatePaymentHistoryExcel(paymentFile);
-        excelGenerator.generateLimitUtilisationExcel(utilisationFile);
+    private static final String BASE_PATH = "C:/Documents/pdffiles/";
 
-        // Create entry with @Builder
-        CreditCardBureau record = CreditCardBureau.builder()
-                .customerId(customerId)
-                .creditScore(generateCreditScore())
-                .paymentHistoryFilePath(paymentFile)
-                .limitUtilisationFilePath(utilisationFile)
-                .allottedCreditLimit(generateRandomLimit())
-                .updatedOn(LocalDateTime.now())
-                .build();
+    public CreditCardBureau generateCustomerData(String customerId) throws IOException {
+        String paymentFile = BASE_PATH + customerId + "_payment_history.xlsx";
+        String utilisationFile = BASE_PATH + customerId + "_limit_utilisation.xlsx";
 
-        return repo.save(record);
-    }
+        excelUtil.generatePaymentHistoryExcel(paymentFile);
+        excelUtil.generateLimitUtilisationExcel(utilisationFile);
 
-    private int generateCreditScore() {
-        return 650 + new Random().nextInt(150); // Between 650–800
-    }
+        CreditCardBureau bureau = new CreditCardBureau();
+        bureau.setCustomerId(customerId);
+        bureau.setCreditScore(dataSynth.generateRandomInt(650, 900));
+        bureau.setPaymentHistoryFilepath(paymentFile);
+        bureau.setLimitUtilisationFilepath(utilisationFile);
+        bureau.setAllottedCreditLimit(dataSynth.generateRandomDouble(50000, 200000));
+        bureau.setUpdatedOn(LocalDateTime.now());
 
-    private double generateRandomLimit() {
-        return 100000 + new Random().nextDouble() * 100000; // 1L–2L
+        return repository.save(bureau);
     }
 }
