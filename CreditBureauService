@@ -1,0 +1,50 @@
+package com.example.creditbureau.service;
+
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
+
+@Service
+public class DataSynthesisService {
+
+    private final Random random = new Random();
+
+    public String generateAccountId() {
+        String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return "" + letters.charAt(random.nextInt(26))
+                + letters.charAt(random.nextInt(26))
+                + letters.charAt(random.nextInt(26))
+                + (1000 + random.nextInt(9000));
+    }
+
+    public String generateRandomDate() {
+        LocalDate date = LocalDate.now().minusDays(random.nextInt(365));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        return date.format(formatter);
+    }
+
+    public String generateRandomMonth() {
+        return Month.of(random.nextInt(12) + 1).toString();
+    }
+
+    public String generateStatus() {
+        int choice = random.nextInt(3);
+        int days = random.nextInt(10) + 1;
+        return switch (choice) {
+            case 0 -> "Paid on time";
+            case 1 -> "Paid early by " + days + " days";
+            default -> "Paid late by " + days + " days";
+        };
+    }
+
+    public int generateRandomInt(int min, int max) {
+        return random.nextInt(max - min + 1) + min;
+    }
+
+    public double generateRandomDouble(double min, double max) {
+        return Math.round((random.nextDouble() * (max - min) + min) * 100.0) / 100.0;
+    }
+}
