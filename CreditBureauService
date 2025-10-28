@@ -1,50 +1,43 @@
 package com.example.creditbureau.service;
 
+import com.example.creditbureau.entity.CreditCardBureau;
+import com.example.creditbureau.repository.CreditCardBureauRepository;
+import com.example.creditbureau.utils.ExcelGeneratorUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.Month;
-import java.time.format.DateTimeFormatter;
-import java.util.Random;
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Service
-public class DataSynthesisService {
+public class CreditCardBureauService {
 
-    private final Random random = new Random();
+    @Autowired
+    private CreditCardBureauRepository repository;
 
-    public String generateAccountId() {
-        String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        return "" + letters.charAt(random.nextInt(26))
-                + letters.charAt(random.nextInt(26))
-                + letters.charAt(random.nextInt(26))
-                + (1000 + random.nextInt(9000));
-    }
+    @Autowired
+    private DataSynthesisService dataSynth;
 
-    public String generateRandomDate() {
-        LocalDate date = LocalDate.now().minusDays(random.nextInt(365));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        return date.format(formatter);
-    }
+    @Autowired
+    private ExcelGeneratorUtil excelUtil;
 
-    public String generateRandomMonth() {
-        return Month.of(random.nextInt(12) + 1).toString();
-    }
+    private static final String BASE_PATH = "C:/Documents/pdffiles/";
 
-    public String generateStatus() {
-        int choice = random.nextInt(3);
-        int days = random.nextInt(10) + 1;
-        return switch (choice) {
-            case 0 -> "Paid on time";
-            case 1 -> "Paid early by " + days + " days";
-            default -> "Paid late by " + days + " days";
-        };
-    }
+    public CreditCardBureau generateCustomerData(String customerId) throws IOException {
+        String paymentFile = BASE_PATH + customerId + "_payment_history.xlsx";
+        String utilisationFile = BASE_PATH + customerId + "_limit_utilisation.xlsx";
 
-    public int generateRandomInt(int min, int max) {
-        return random.nextInt(max - min + 1) + min;
-    }
+        excelUtil.generatePaymentHistoryExcel(paymentFile);
+        excelUtil.generateLimitUtilisationExcel(utilisationFile);
 
-    public double generateRandomDouble(double min, double max) {
-        return Math.round((random.nextDouble() * (max - min) + min) * 100.0) / 100.0;
+        CreditCardBureau bureau = new CreditCardBureau();
+        bureau.setCustomerId(customerId);
+        bureau.setCreditScore(dataSynth.generateRandomInt(650, 900));
+        bureau.setPaymentHistoryFilepath(paymentFile);
+        bureau.setLimitUtilisationFilepath(utilisationFile);
+        bureau.setAllottedCreditLimit(dataSynth.generateRandomDouble(50000, 200000));
+        bureau.setUpdatedOn(LocalDateTime.now());
+
+        return repository.save(bureau);
     }
 }
