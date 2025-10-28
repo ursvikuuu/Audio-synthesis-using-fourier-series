@@ -1,0 +1,79 @@
+package com.example.creditbureau.utils;
+
+import com.example.creditbureau.service.DataSynthesisService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Component;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+
+@Component
+public class ExcelGeneratorUtil {
+
+    private final DataSynthesisService dataSynth;
+
+    public ExcelGeneratorUtil(DataSynthesisService dataSynth) {
+        this.dataSynth = dataSynth;
+    }
+
+    public void generatePaymentHistoryExcel(String filepath) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Payment History");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Account");
+        header.createCell(1).setCellValue("Date");
+        header.createCell(2).setCellValue("Amount");
+        header.createCell(3).setCellValue("Status");
+
+        // Generate 5 account IDs
+        List<String> accountIds = dataSynth.generateMultipleAccountIds(5);
+        int rowCount = 1;
+
+        // 10 entries per account (total 50)
+        for (String account : accountIds) {
+            for (int i = 0; i < 10; i++) {
+                Row row = sheet.createRow(rowCount++);
+                row.createCell(0).setCellValue(account);
+                row.createCell(1).setCellValue(dataSynth.generateRandomDate());
+                row.createCell(2).setCellValue(dataSynth.generateRandomDouble(10000, 100000));
+                row.createCell(3).setCellValue(dataSynth.generateStatus());
+            }
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(filepath)) {
+            workbook.write(fos);
+        }
+        workbook.close();
+    }
+
+    public void generateLimitUtilisationExcel(String filepath) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Limit Utilisation");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Account");
+        header.createCell(1).setCellValue("Month");
+        header.createCell(2).setCellValue("Current Limit");
+        header.createCell(3).setCellValue("Utilisation (%)");
+
+        // Generate same 5 accounts for consistency
+        List<String> accountIds = dataSynth.generateMultipleAccountIds(5);
+        int rowCount = 1;
+
+        for (String account : accountIds) {
+            for (int i = 0; i < 10; i++) {
+                Row row = sheet.createRow(rowCount++);
+                row.createCell(0).setCellValue(account);
+                row.createCell(1).setCellValue(dataSynth.generateRandomMonth());
+                row.createCell(2).setCellValue(dataSynth.generateRandomDouble(50000, 200000));
+                row.createCell(3).setCellValue(dataSynth.generateRandomDouble(10, 70));
+            }
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(filepath)) {
+            workbook.write(fos);
+        }
+        workbook.close();
+    }
+}
