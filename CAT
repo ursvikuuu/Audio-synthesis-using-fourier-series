@@ -1,13 +1,54 @@
 import React, { useState } from "react";
-import { Tabs, Tab } from "react-bootstrap";
+import { Tabs, Tab, Pagination } from "react-bootstrap";
 
 const CreditAssessmentTable = ({ bureauDetails }) => {
   const [key, setKey] = useState("paymentHistory");
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [utilisationPage, setUtilisationPage] = useState(1);
+  const rowsPerPage = 5;
 
-  // Extract details safely
   const customerId = bureauDetails?.customerId || "N/A";
   const paymentHistory = bureauDetails?.paymentHistory || [];
   const limitUtilisation = bureauDetails?.limitUtilisation || [];
+
+  // Pagination logic for Payment History
+  const totalPaymentPages = Math.ceil(paymentHistory.length / rowsPerPage);
+  const paymentStart = (paymentPage - 1) * rowsPerPage;
+  const paymentEnd = paymentStart + rowsPerPage;
+  const paginatedPayments = paymentHistory.slice(paymentStart, paymentEnd);
+
+  // Pagination logic for Limit Utilisation
+  const totalUtilisationPages = Math.ceil(limitUtilisation.length / rowsPerPage);
+  const utilisationStart = (utilisationPage - 1) * rowsPerPage;
+  const utilisationEnd = utilisationStart + rowsPerPage;
+  const paginatedUtilisation = limitUtilisation.slice(utilisationStart, utilisationEnd);
+
+  // Function to render Bootstrap pagination component
+  const renderPagination = (currentPage, totalPages, setPage) => (
+    <Pagination className="justify-content-center mt-3">
+      <Pagination.First onClick={() => setPage(1)} disabled={currentPage === 1} />
+      <Pagination.Prev onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} />
+
+      {[...Array(totalPages)].map((_, index) => (
+        <Pagination.Item
+          key={index + 1}
+          active={index + 1 === currentPage}
+          onClick={() => setPage(index + 1)}
+        >
+          {index + 1}
+        </Pagination.Item>
+      ))}
+
+      <Pagination.Next
+        onClick={() => setPage(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      />
+      <Pagination.Last
+        onClick={() => setPage(totalPages)}
+        disabled={currentPage === totalPages}
+      />
+    </Pagination>
+  );
 
   return (
     <div className="container mt-4">
@@ -36,8 +77,8 @@ const CreditAssessmentTable = ({ bureauDetails }) => {
                 </tr>
               </thead>
               <tbody>
-                {paymentHistory.length > 0 ? (
-                  paymentHistory.map((row, index) => (
+                {paginatedPayments.length > 0 ? (
+                  paginatedPayments.map((row, index) => (
                     <tr key={index}>
                       <td>{row.account}</td>
                       <td>{row.date}</td>
@@ -55,6 +96,10 @@ const CreditAssessmentTable = ({ bureauDetails }) => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination for Payment History */}
+          {totalPaymentPages > 1 &&
+            renderPagination(paymentPage, totalPaymentPages, setPaymentPage)}
         </Tab>
 
         {/* 💳 Limit Utilisation Tab */}
@@ -70,8 +115,8 @@ const CreditAssessmentTable = ({ bureauDetails }) => {
                 </tr>
               </thead>
               <tbody>
-                {limitUtilisation.length > 0 ? (
-                  limitUtilisation.map((row, index) => (
+                {paginatedUtilisation.length > 0 ? (
+                  paginatedUtilisation.map((row, index) => (
                     <tr key={index}>
                       <td>{row.account}</td>
                       <td>{row.month}</td>
@@ -89,6 +134,10 @@ const CreditAssessmentTable = ({ bureauDetails }) => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination for Limit Utilisation */}
+          {totalUtilisationPages > 1 &&
+            renderPagination(utilisationPage, totalUtilisationPages, setUtilisationPage)}
         </Tab>
       </Tabs>
     </div>
