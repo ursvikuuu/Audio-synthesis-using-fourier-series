@@ -1,0 +1,86 @@
+import React, { useState } from "react";
+import { Modal, Button, Form, Spinner } from "react-bootstrap";
+import axios from "axios";
+
+const UploadModal = ({ show, handleClose, customerId, uploadType }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  // handle file selection
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  // upload the file to Spring Boot backend
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("Please select a file before uploading!");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("customerId", customerId);
+    formData.append("uploadType", uploadType); // e.g. "paymentHistory" or "limitUtilisation"
+
+    try {
+      const response = await axios.post("http://localhost:8080/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      console.log("Upload Success:", response.data);
+      alert("File uploaded successfully!");
+      handleClose();
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Upload failed! Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Modal show={show} onHide={handleClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Upload New File</Modal.Title>
+      </Modal.Header>
+
+      <Modal.Body>
+        <Form>
+          <Form.Group>
+            <Form.Label>Select File (PDF or Excel)</Form.Label>
+            <Form.Control
+              type="file"
+              accept=".pdf,.xlsx,.xls"
+              onChange={handleFileChange}
+            />
+          </Form.Group>
+
+          {selectedFile && (
+            <p className="mt-2 text-success">
+              Selected file: <strong>{selectedFile.name}</strong>
+            </p>
+          )}
+        </Form>
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose} disabled={uploading}>
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={handleUpload} disabled={uploading}>
+          {uploading ? (
+            <>
+              <Spinner size="sm" animation="border" /> Uploading...
+            </>
+          ) : (
+            "Upload"
+          )}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+export default UploadModal;
