@@ -1,0 +1,98 @@
+import React, { useState } from "react";
+import { Tabs, Tab } from "react-bootstrap";
+
+const CreditAssessmentTable = ({ bureauDetails }) => {
+  const [key, setKey] = useState("paymentHistory");
+
+  // Extract details safely
+  const customerId = bureauDetails?.customerId || "N/A";
+  const paymentHistory = bureauDetails?.paymentHistory || [];
+  const limitUtilisation = bureauDetails?.limitUtilisation || [];
+
+  return (
+    <div className="container mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4>Credit Assessment Details</h4>
+        <h5 className="text-primary">Customer ID: {customerId}</h5>
+      </div>
+
+      <Tabs
+        id="credit-assessment-tabs"
+        activeKey={key}
+        onSelect={(k) => setKey(k)}
+        className="mb-3"
+        justify
+      >
+        {/* 🧾 Payment History Tab */}
+        <Tab eventKey="paymentHistory" title="Payment History">
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover">
+              <thead className="table-dark">
+                <tr>
+                  <th>Account ID</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentHistory.length > 0 ? (
+                  paymentHistory.map((row, index) => (
+                    <tr key={index}>
+                      <td>{row.account}</td>
+                      <td>{row.date}</td>
+                      <td>{row.amount}</td>
+                      <td>{row.status}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center text-muted">
+                      No payment history available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Tab>
+
+        {/* 💳 Limit Utilisation Tab */}
+        <Tab eventKey="limitUtilisation" title="Limit Utilisation">
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover">
+              <thead className="table-dark">
+                <tr>
+                  <th>Account ID</th>
+                  <th>Month</th>
+                  <th>Credit Limit</th>
+                  <th>Utilisation (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {limitUtilisation.length > 0 ? (
+                  limitUtilisation.map((row, index) => (
+                    <tr key={index}>
+                      <td>{row.account}</td>
+                      <td>{row.month}</td>
+                      <td>{row.currentLimit}</td>
+                      <td>{row.utilisation}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center text-muted">
+                      No limit utilisation available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Tab>
+      </Tabs>
+    </div>
+  );
+};
+
+export default CreditAssessmentTable;
